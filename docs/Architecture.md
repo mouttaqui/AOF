@@ -87,7 +87,7 @@ The Apex Orbit Framework (AOF) is structured into distinct layers, each with a s
         *   Provides static utility methods (e.g., `logError(Exception ex, String className, String methodName, List<Id> recordIds, String sObjectTypeApiName, String severity)`) to easily publish `ErrorLogEvent__e` events from anywhere in the code.
         *   This service handles the instantiation and publishing of the Platform Event, ensuring it's done correctly and efficiently.
         *   It should include its own try-catch blocks to prevent the error logging mechanism itself from throwing unhandled exceptions.
-    *   **Platform Event Subscriber (e.g., `ErrorLogEventTrigger` on `ErrorLogEvent__e`):
+    *   **Platform Event Subscriber (e.g., `ErrorLogEventTrigger` on `ErrorLogEvent__e`):**
         *   An Apex trigger that subscribes to the `ErrorLogEvent__e` events.
         *   When an event is received, this trigger creates and inserts `Error_Log__c` records in a bulkified manner.
         *   This asynchronous processing ensures that the creation of the persistent error log record does not impact the performance or governor limits of the original transaction.
