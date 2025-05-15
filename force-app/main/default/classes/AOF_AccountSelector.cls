@@ -36,7 +36,6 @@ public with sharing class AOF_AccountSelector extends AOF_Application_Selector {
                 accessibleFields.add(fieldName);
             }
         }
-        return String.join(accessibleFields, 
         return String.join(accessibleFields, ", ");
     }
 
