@@ -1,2 +1,1 @@
-# AOF
-Apex Orbit Framework
+# Apex Orbit Framework (AOF) - Documentation
