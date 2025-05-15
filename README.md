@@ -53,8 +53,6 @@ Adherence to these principles ensures that the Apex Orbit Framework provides a r
 ---
 
 
-
-
 ## 3. Framework Architecture and Layers
 
 The Apex Orbit Framework (AOF) is structured into distinct layers, each with a specific responsibility. This layered architecture promotes separation of concerns, making the framework modular, easier to understand, test, and maintain. The primary layers are: Trigger Handler, Service, Domain, Selector, Unit of Work, and Error Handling.
