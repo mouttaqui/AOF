@@ -1,1 +1,5 @@
-theme: jekyll-theme-minimal
+title: Apex Orbit Framework
+description: Apex Orbit Framework
+show_downloads: true
+google_analytics:
+theme: jekyll-theme-architect
