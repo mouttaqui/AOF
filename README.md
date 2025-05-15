@@ -25,9 +25,6 @@
 ---
 
 
-
-
-
 ## 1. Introduction
 
 The Apex Orbit Framework (AOF) is a lightweight, scalable, and easy-to-use Salesforce Apex framework designed to streamline and standardize Apex development. It adheres to the principles of Separation of Concerns, promoting maintainability, testability, and reusability of code. AOF is built to be generic, supporting any Salesforce SObject, and is optimized for large-scale deployments, particularly those with 10,000+ users, by placing a strong emphasis on bulkification and efficient processing.
