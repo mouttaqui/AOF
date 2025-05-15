@@ -73,7 +73,7 @@ The Apex Orbit Framework (AOF) is structured into distinct layers, each with a s
     *   Includes a static bypass mechanism (e.g., `AOF_TriggerHandler.bypassAllTriggers = true;` or per-object bypass) to allow administrators or data migration processes to disable trigger logic temporarily.
     *   Ensures that all calls to subsequent layers are inherently bulk-safe because it operates on the collections of records provided by the trigger context.
     *   The base `AOF_TriggerHandler` contains virtual methods for each trigger event (e.g., `beforeInsert()`, `afterUpdate()`). These methods are intended to be called by the `run()` method. Concrete SObject-specific domain classes will implement the logic for these events.
-*   **SObject-Specific Triggers (e.g., `AccountTrigger.trigger`):
+*   **SObject-Specific Triggers** (e.g., `AccountTrigger.trigger`):
     *   Each SObject that requires trigger logic will have a single trigger file.
     *   This trigger file will contain minimal code, typically just one line to instantiate `AOF_TriggerHandler` and call its `run()` method.
     *   **Example (`AccountTrigger.trigger`):**
