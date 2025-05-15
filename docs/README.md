@@ -1,148 +1,25 @@
 # Apex Orbit Framework (AOF) - Comprehensive Documentation
 
 ## Table of Contents
-[Core Principles](#2-core-principles)
-[Framework Architecture and Layers](#3-framework-architecture-and-layers)
-    *   [3.1. Trigger Handler Layer](#31-trigger-handler-layer)
-    *   [3.2. Service Layer](#32-service-layer)
-    *   [3.3. Domain Layer](#33-domain-layer)
-    *   [3.4. Selector Layer](#34-selector-layer)
-    *   [3.5. Unit of Work Layer](#35-unit-of-work-layer)
-    *   [3.6. Error Handling Framework](#36-error-handling-framework)
-[Trigger Execution Flow](#4-trigger-execution-flow)
-[Scalability and Performance](#5-scalability-and-performance)
-[Security Considerations](#6-security-considerations)
-[Setup and Installation Guide](#7-setup-and-installation-guide)
-[Core Components In-Depth](#8-core-components-in-depth)
-[Usage Guide and Examples](#9-usage-guide-and-examples)
-[Error Handling In-Depth](#10-error-handling-in-depth)
-[Best Practices](#11-best-practices)
-[Customization and Extension](#12-customization-and-extension)
-[Glossary](#13-glossary)
-[References](References.md)
-
----
-
-
-## 2. Core Principles
-
-The Apex Orbit Framework is built upon several core principles that guide its architecture and promote best practices in Salesforce development:
-
-*   **Separation of Concerns:** Each layer of the framework (Trigger Handling, Service, Domain, Selector, Unit of Work) has a distinct and well-defined responsibility. This separation makes the codebase easier to understand, maintain, test, and evolve. Changes in one area are less likely to impact others, leading to a more robust system.
-*   **Bulkification:** This is a paramount principle. All operations, from data retrieval to DML, are designed to handle collections of records efficiently. This is crucial for avoiding Salesforce governor limits, ensuring the framework performs well under load, and scales with growing data volumes.
-*   **Scalability:** The architecture is designed to support growth in data volume, transaction complexity, and user base. It is specifically engineered to be suitable for organizations with 10,000+ users, ensuring long-term viability.
-*   **Reusability:** Common logic is encapsulated within abstract classes, interfaces, and service methods. This promotes code reuse, reduces redundancy, and ensures consistency across different parts of an application.
-*   **Testability:** Components are designed with testability in mind. Clear interfaces, dependency injection (where appropriate), and separation of concerns make it easier to write focused and effective unit tests, leading to higher code quality.
-*   **Lightweight and Simplicity:** AOF avoids unnecessary complexity and focuses on providing core functionalities essential for robust and efficient application development. The goal is to be powerful yet easy to understand and use.
-*   **Generic Applicability:** The framework is designed to be applicable to any SObject within Salesforce. This promotes a consistent development pattern across the organization, making it easier for developers to switch between different areas of the application.
-*   **Single Trigger Per SObject:** This pattern simplifies trigger management, makes the order of execution predictable, and provides a single point of entry for all trigger-based logic on an SObject.
-*   **Customizable and Decoupled Error Handling:** AOF utilizes Platform Events for asynchronous error logging to a dedicated custom SObject. This ensures that error logging is robust and that failures in the main transaction do not prevent error details from being captured. This mechanism is also customizable to fit specific organizational needs.
-*   **Inspired by Proven Patterns (Not a Clone):** While AOF leverages well-established and proven design patterns for its structure (such as those seen in fflib for Domain, Selector, and Unit of Work layers), it is implemented as a custom, streamlined solution. This allows it to be tailored to the specific goals of being lightweight and easy to adopt while still benefiting from industry best practices.
-
-Adherence to these principles ensures that the Apex Orbit Framework provides a reliable, efficient, and maintainable foundation for Salesforce application development.
-
----
-
-
-## 3. Framework Architecture and Layers
-
-The Apex Orbit Framework (AOF) is structured into distinct layers, each with a specific responsibility. This layered architecture promotes separation of concerns, making the framework modular, easier to understand, test, and maintain. The primary layers are: Trigger Handler, Service, Domain, Selector, Unit of Work, and Error Handling.
-
-### 3.1. Trigger Handler Layer
-
-**Component:** `AOF_TriggerHandler.cls`
-
-*   **Purpose:** This is the entry point for all SObject trigger logic. AOF employs a **single trigger per SObject** pattern. Instead of writing complex logic directly within individual SObject triggers (e.g., `AccountTrigger.trigger`), these triggers will be minimal, primarily responsible for instantiating and invoking the `AOF_TriggerHandler`.
-*   **Functionality:**
-    *   Manages and provides access to trigger context variables (e.g., `Trigger.new`, `Trigger.oldMap`, `Trigger.operationType`).
-    *   Orchestrates the execution flow by delegating calls to the appropriate methods in the Domain Layer or, for more complex cross-object logic, the Service Layer. The dispatch is based on the SObject type and the specific trigger context (e.g., `before insert`, `after update`).
-    *   Includes a static bypass mechanism (e.g., `AOF_TriggerHandler.bypassAllTriggers = true;` or per-object bypass) to allow administrators or data migration processes to disable trigger logic temporarily.
-    *   Ensures that all calls to subsequent layers are inherently bulk-safe because it operates on the collections of records provided by the trigger context.
-    *   The base `AOF_TriggerHandler` contains virtual methods for each trigger event (e.g., `beforeInsert()`, `afterUpdate()`). These methods are intended to be called by the `run()` method. Concrete SObject-specific domain classes will implement the logic for these events.
-*   **SObject-Specific Triggers** (e.g., `AccountTrigger.trigger`):
-    *   Each SObject that requires trigger logic will have a single trigger file.
-    *   This trigger file will contain minimal code, typically just one line to instantiate `AOF_TriggerHandler` and call its `run()` method.
-    *   **Example (`AccountTrigger.trigger`):**
-        ```apex
-        trigger AccountTrigger on Account (before insert, after insert, before update, after update, before delete, after delete, after undelete) {
-            new AOF_TriggerHandler(Account.SObjectType, Trigger.operationType).run();
-        }
-        ```
-
-### 3.2. Service Layer
-
-**Component:** `AOF_Application_Service.cls` (Interface)
-
-*   **Purpose:** The Service Layer encapsulates business logic that is not tied to a single SObject or that orchestrates operations across multiple SObjects or layers. It handles more complex business processes, integrations with external systems, or operations that require a broader scope than a single SObject domain.
-*   **Functionality:**
-    *   The `AOF_Application_Service` interface defines a contract for service classes. Concrete service classes will implement this interface (or extend an abstract base service class if common service utilities are identified).
-    *   **SObject-Specific or Process-Specific Service Classes** (e.g., `AOF_AccountService.cls`, `AOF_OrderFulfillmentService.cls`) contain the actual business logic.
-    *   Methods within service classes are designed to be bulkified, operating on lists or maps of SObjects or other relevant data structures.
-    *   Services interact with the Selector Layer to query data and with the Unit of Work Layer to register DML operations.
-    *   They can call methods in other service classes or in the Domain Layer for SObject-specific logic.
-    *   Services can be responsible for managing transaction control for complex operations, although DML operations themselves are preferably delegated to the Unit of Work.
-
-### 3.3. Domain Layer
-
-**Component:** `AOF_Application_Domain.cls` (Abstract Class)
-
-*   **Purpose:** The Domain Layer represents the SObject itself and contains logic that is specific to individual records or collections of records of that SObject type. This layer is responsible for record-level business rules, validations, calculations, and manipulations that directly pertain to the state of an SObject.
-*   **Functionality:**
-    *   The `AOF_Application_Domain` abstract class provides a base for SObject-specific domain classes.
-    *   Its constructor typically accepts `List<SObject>` (from `Trigger.new` or records to be processed) and `Map<Id, SObject>` (from `Trigger.oldMap` for update/delete contexts).
-    *   **SObject-Specific Domain Classes** (e.g., `AOF_AccountDomain.cls` extending `AOF_Application_Domain`) implement the concrete logic for a particular SObject.
-    *   These classes take the relevant SObject records in their constructor.
-    *   They provide overrides for context-specific methods defined in `AOF_Application_Domain` (e.g., `onBeforeInsert()`, `onAfterUpdate()`, `validate()`, `calculateRollups()`).
-    *   All methods within domain classes are inherently bulkified as they operate on the collection of records passed into the domain class instance.
-    *   The `AOF_TriggerHandler` delegates the execution of trigger context-specific logic to these domain methods.
-
-### 3.4. Selector Layer
-
-**Component:** `AOF_Application_Selector.cls` (Abstract Class)
-
-*   **Purpose:** The Selector Layer is responsible for all SObject querying. It centralizes SOQL queries, making them reusable, optimized, and secure.
-*   **Functionality:**
-    *   The `AOF_Application_Selector` abstract class provides a base for SObject-specific selector classes.
-    *   It includes base methods for common query needs, dynamic field selection, ordering, and pagination (if needed).
-    *   A core responsibility of this layer is to enforce security: Field-Level Security (FLS) and CRUD (Create, Read, Update, Delete) permissions. Queries should use `WITH SECURITY_ENFORCED` or results should be processed with `Security.stripInaccessible()` to ensure users only see data they are permitted to access.
-    *   The base class can provide utility methods to get the SObjectType, describe field information, and build dynamic queries safely.
-    *   **SObject-Specific Selector Classes** (e.g., `AOF_AccountSelector.cls` extending `AOF_Application_Selector`) encapsulate all SOQL queries for a specific SObject.
-    *   Methods in these classes return `List<SObject>` or `Map<Id, SObject>` and are named descriptively based on their query criteria (e.g., `selectByIds(Set<Id> ids)`, `selectActiveAccountsByType(String type)`).
-    *   Selectors are optimized for performance by querying only necessary fields and using efficient `WHERE` clauses. They are inherently bulk-safe.
-
-### 3.5. Unit of Work Layer
-
-**Component:** `AOF_Application_UnitOfWork.cls` (Class)
-
-*   **Purpose:** The Unit of Work (UoW) Layer manages DML (Data Manipulation Language) operations. It centralizes DML calls, ensuring they are performed efficiently, in the correct order, and within Salesforce governor limits by reducing the number of DML statements.
-*   **Functionality:**
-    *   The `AOF_Application_UnitOfWork` class provides methods to register records for DML operations without immediately executing them (e.g., `registerNew(SObject record)`, `registerDirty(SObject record)`, `registerDeleted(SObject record)`). It supports registering single records or lists of records.
-    *   A `commitWork()` method is called (typically once, at the end of a logical transaction phase, often by the `AOF_TriggerHandler` or a controlling service method) to execute all registered DML operations in a bulkified manner (e.g., one `insert` call for all registered new records).
-    *   The UoW can help manage transaction boundaries and can be configured to process DML operations grouped by SObject type if a specific order of operations is critical (e.g., insert Parent__c records before Child__c records).
-    *   It helps in maintaining transaction integrity. By default, DML operations are performed with `allOrNone=true`, meaning if one record fails, the entire batch for that DML statement rolls back. More granular error handling for partial success can be built in if required, but often a full rollback on error simplifies logic.
-
-### 3.6. Error Handling Framework
-
-*   **Purpose:** To provide a robust, decoupled, and customizable mechanism for logging errors and exceptions that occur within the framework or application logic.
-*   **Components:**
-    *   **`ErrorLogEvent__e` (Platform Event):** A custom Platform Event defined to carry error details. Using a Platform Event decouples the error logging from the main transaction, meaning the error log can be saved even if the original transaction that caused the error is rolled back.
-        *   **Recommended Fields:** `Timestamp__c` (DateTime), `TransactionId__c` (Text), `OriginatingClassName__c` (Text), `OriginatingMethodName__c` (Text), `LineNumber__c` (Number), `ErrorMessage__c` (Long Text Area), `StackTrace__c` (Long Text Area), `SObjectType__c` (Text, optional), `RecordIds__c` (Text, optional, comma-separated list of Ids involved in the error), `Severity__c` (Picklist: e.g., Critical, High, Medium, Low, Info).
-    *   **`Error_Log__c` (Custom SObject):** A custom SObject used to persistently store error details captured by the Platform Event.
-        *   **Fields:** Mirroring the Platform Event fields, plus additional fields for tracking and management, such as `ErrorLogName` (Auto Number), `Status__c` (Picklist: New, Investigating, Resolved, Ignored), `AssignedTo__c` (User Lookup), `ResolutionNotes__c` (Long Text Area).
-    *   **`AOF_ErrorHandlerService.cls` (Utility Class):**
-        *   Provides static utility methods (e.g., `logError(Exception ex, String className, String methodName, List<Id> recordIds, String sObjectTypeApiName, String severity)`) to easily publish `ErrorLogEvent__e` events from anywhere in the code.
-        *   This service handles the instantiation and publishing of the Platform Event, ensuring it's done correctly and efficiently.
-        *   It should include its own try-catch blocks to prevent the error logging mechanism itself from throwing unhandled exceptions.
-    *   **Platform Event Subscriber (e.g., `ErrorLogEventTrigger` on `ErrorLogEvent__e`):
-        *   An Apex trigger that subscribes to the `ErrorLogEvent__e` events.
-        *   When an event is received, this trigger creates and inserts `Error_Log__c` records in a bulkified manner.
-        *   This asynchronous processing ensures that the creation of the persistent error log record does not impact the performance or governor limits of the original transaction.
-
-This layered architecture ensures that the Apex Orbit Framework is organized, scalable, and promotes best practices in Salesforce development.
-
----
-
-
+* [Core Principles](CorePrinciples.md)
+* [Framework Architecture and Layers](Architecture.md)
+    *   [3.1. Trigger Handler Layer](Architecture.md#1-trigger-handler-layer)
+    *   [3.2. Service Layer](Architecture.md#2-service-layer)
+    *   [3.3. Domain Layer](Architecture.md#3-domain-layer)
+    *   [3.4. Selector Layer](Architecture.md#4-selector-layer)
+    *   [3.5. Unit of Work Layer](Architecture.md#5-unit-of-work-layer)
+    *   [3.6. Error Handling Framework](Architecture.md#6-error-handling-framework)
+* [Trigger Execution Flow](#4-trigger-execution-flow)
+* [Scalability and Performance](#5-scalability-and-performance)
+* [Security Considerations](#6-security-considerations)
+* [Setup and Installation Guide](#7-setup-and-installation-guide)
+* [Core Components In-Depth](#8-core-components-in-depth)
+* [Usage Guide and Examples](#9-usage-guide-and-examples)
+* [Error Handling In-Depth](#10-error-handling-in-depth)
+* [Best Practices](#11-best-practices)
+* [Customization and Extension](#12-customization-and-extension)
+* [Glossary](#13-glossary)
+* [References](References.md)
 
 
 ## 4. Trigger Execution Flow
