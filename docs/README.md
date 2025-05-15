@@ -1,26 +1,26 @@
 # Apex Orbit Framework (AOF) - Comprehensive Documentation
 
 ## Table of Contents
-1.  [Introduction](#1-introduction)
-2.  [Core Principles](#2-core-principles)
-3.  [Framework Architecture and Layers](#3-framework-architecture-and-layers)
+[Introduction](#1-introduction)
+[Core Principles](#2-core-principles)
+[Framework Architecture and Layers](#3-framework-architecture-and-layers)
     *   [3.1. Trigger Handler Layer](#31-trigger-handler-layer)
     *   [3.2. Service Layer](#32-service-layer)
     *   [3.3. Domain Layer](#33-domain-layer)
     *   [3.4. Selector Layer](#34-selector-layer)
     *   [3.5. Unit of Work Layer](#35-unit-of-work-layer)
     *   [3.6. Error Handling Framework](#36-error-handling-framework)
-4.  [Trigger Execution Flow](#4-trigger-execution-flow)
-5.  [Scalability and Performance](#5-scalability-and-performance)
-6.  [Security Considerations](#6-security-considerations)
-7.  [Setup and Installation Guide](#7-setup-and-installation-guide)
-8.  [Core Components In-Depth](#8-core-components-in-depth)
-9.  [Usage Guide and Examples](#9-usage-guide-and-examples)
-10. [Error Handling In-Depth](#10-error-handling-in-depth)
-11. [Best Practices](#11-best-practices)
-12. [Customization and Extension](#12-customization-and-extension)
-13. [Glossary](#13-glossary)
-14. [References](#14-references)
+[Trigger Execution Flow](#4-trigger-execution-flow)
+[Scalability and Performance](#5-scalability-and-performance)
+[Security Considerations](#6-security-considerations)
+[Setup and Installation Guide](#7-setup-and-installation-guide)
+[Core Components In-Depth](#8-core-components-in-depth)
+[Usage Guide and Examples](#9-usage-guide-and-examples)
+[Error Handling In-Depth](#10-error-handling-in-depth)
+[Best Practices](#11-best-practices)
+[Customization and Extension](#12-customization-and-extension)
+[Glossary](#13-glossary)
+[References](References.md)
 
 ---
 
@@ -1170,14 +1170,3 @@ When customizing or extending AOF, always ensure that your changes adhere to the
 *   **Trigger Context Variables:** Static variables in Apex triggers that provide information about the current DML operation (e.g., `Trigger.new`, `Trigger.oldMap`, `Trigger.isInsert`, `Trigger.isBefore`).
 *   **Trigger Handler:** A component in AOF (`AOF_TriggerHandler`) that orchestrates trigger logic, delegating to Domain or Service layers.
 *   **Unit of Work (UoW):** A design pattern and a component in AOF (`AOF_Application_UnitOfWork`) that manages DML operations by collecting them and executing them in a bulkified manner at the end of a transaction.
-
-## 14. References
-
-*   **Salesforce Apex Developer Guide:** [https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/](https://developer.salesforce.com/docs/atlas.en-us.apexcode.meta/apexcode/)
-*   **Salesforce Platform Events Developer Guide:** [https://developer.salesforce.com/docs/platform/platform-events/guide/platform_events_intro.html](https://developer.salesforce.com/docs/platform/platform-events/guide/platform_events_intro.html)
-*   **Apex Enterprise Patterns (fflib inspiration for Domain, Selector, UoW):**
-    *   GitHub (FinancialForce fflib): [https://github.com/financialforce/fflib-apex-common](https://github.com/financialforce/fflib-apex-common)
-    *   Trailhead: Apex Enterprise Patterns: [https://trailhead.salesforce.com/content/learn/modules/apex_patterns_sl](https://trailhead.salesforce.com/content/learn/modules/apex_patterns_sl)
-*   **Trigger Frameworks and Apex Best Practices:** Numerous blogs and articles by Salesforce MVPs and community experts discuss these topics. Searching for "Salesforce trigger framework" or "Apex best practices" will yield many valuable resources.
-
----
