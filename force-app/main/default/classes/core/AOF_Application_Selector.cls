@@ -168,4 +168,3 @@ public abstract with sharing class AOF_Application_Selector {
         return Database.query(queryString);
     }
 }
-

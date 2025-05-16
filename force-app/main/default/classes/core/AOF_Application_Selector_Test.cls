@@ -205,4 +205,3 @@ private class AOF_Application_Selector_Test {
         System.assert(querySucceeded, "Query with SECURITY_ENFORCED should succeed if fields are accessible.");
     }
 }
-

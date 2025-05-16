@@ -4,7 +4,7 @@
  * and reduces the number of DML statements.
  * Part of the Apex Orbit Framework (AOF).
  */
-public class AOF_Application_UnitOfWork {
+public inherited sharing class AOF_Application_UnitOfWork {
 
     private List<SObject> newRecordsToInsert = new List<SObject>();
     private Map<Id, SObject> dirtyRecordsToUpdate = new Map<Id, SObject>(); // Using Map to ensure unique records by Id
@@ -40,7 +40,7 @@ public class AOF_Application_UnitOfWork {
      * @param record The SObject record to insert.
      */
     public void registerNew(SObject record) {
-        if (record == null) return;
+        if (record == null){ return;}
         if (this.scope == SObjectScope.PER_TYPE) {
             SObjectType sType = record.getSObjectType();
             if (!typedNewRecords.containsKey(sType)) {
@@ -89,7 +89,7 @@ public class AOF_Application_UnitOfWork {
      * @param records The list of SObject records to update. Each must have an Id.
      */
     public void registerDirty(List<SObject> records) {
-        if (records == null || records.isEmpty()) return;
+        if (records == null || records.isEmpty()) {return;}
         if (this.scope == SObjectScope.PER_TYPE) {
             for (SObject record : records) {
                 registerDirty(record); // Delegate to single record method for typed grouping
@@ -230,4 +230,3 @@ public class AOF_Application_UnitOfWork {
         this.typedRecordsToDelete.clear();
     }
 }
-

@@ -88,4 +88,3 @@ private class AOF_ErrorHandlerService_Test {
         System.assert(sr.isSuccess(), 'Platform event should be published successfully.');
     }
 }
-

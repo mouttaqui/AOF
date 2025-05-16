@@ -24,4 +24,3 @@ public interface AOF_Application_Service {
     public class ServiceException extends Exception {}
 
 }
-

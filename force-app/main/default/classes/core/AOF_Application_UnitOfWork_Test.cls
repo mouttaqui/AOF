@@ -252,4 +252,3 @@ private class AOF_Application_UnitOfWork_Test {
         System.assertEquals(0, accounts.size(), 'The valid account should have been rolled back.');
     }
 }
-

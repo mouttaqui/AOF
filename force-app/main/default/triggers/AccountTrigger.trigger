@@ -11,4 +11,3 @@ trigger AccountTrigger on Account (
     // Execute the handler logic
     handler.run();
 }
-

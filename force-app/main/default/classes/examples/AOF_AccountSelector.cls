@@ -109,4 +109,3 @@ public with sharing class AOF_AccountSelector extends AOF_Application_Selector {
     }
     */
 }
-
