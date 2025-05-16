@@ -1,0 +1,9 @@
+{
+    "orgName": "apex-aof",
+    "edition": "Developer",
+    "settings": {
+        "lightningExperienceSettings": {
+            "enableS1DesktopEnabled": true
+        }
+    }
+}
