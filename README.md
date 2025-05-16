@@ -9,7 +9,7 @@ This document provides a comprehensive guide to understanding, setting up, using
 
 ## :page_facing_up: Project Documentation 
 
-*[Visit the documentation of this framework](https://mouttaqui.github.io/AOF/)* to get more information in detail
+*[Visit the documentation of this framework](https://github.com/mouttaqui/AOF/wiki)* to get more information in detail
 
 ## :bulb: Contributing
 
