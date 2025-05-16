@@ -7,15 +7,17 @@ Key features of the AOF include a single trigger per SObject pattern, a robust a
 
 This document provides a comprehensive guide to understanding, setting up, using, and extending the Apex Orbit Framework.
 
-Documentation available *[here](https://mouttaqui.github.io/AOF/)*
+## :page_facing_up: Project Documentation 
 
-## Contributing
+*[Visit the documentation of this framework](https://mouttaqui.github.io/AOF/)* to get more information in detail
+
+## :bulb: Contributing
 
 Pull requests are welcome. For major changes, please open an issue first
 to discuss what you would like to change.
 
 Please make sure to update tests as appropriate.
 
-## License
+## :key: License
 
 [Apache 2.0](https://github.com/mouttaqui/AOF?tab=Apache-2.0-1-ov-file)
