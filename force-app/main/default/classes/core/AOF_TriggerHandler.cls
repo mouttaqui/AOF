@@ -94,7 +94,7 @@ public with sharing class AOF_TriggerHandler {
                 }
             }
             // Re-throwing the exception ensures the DML operation is rolled back by Salesforce if not already handled by addError.
-            // throw e; // Consider carefully. If addError is used, re-throwing might be redundant or mask specific messages.
+            throw e; // Re-throw to ensure transaction rollback if not handled by addError
         }
     }
 
@@ -102,48 +102,118 @@ public with sharing class AOF_TriggerHandler {
     // These methods are intended to be the integration points for SObject-specific logic,
     // typically by invoking methods on a corresponding SObject Domain class.
 
-    protected virtual void beforeInsert() { /* Implement in SObject-specific handler or dispatch to Domain */ }
-    protected virtual void afterInsert() { /* Implement in SObject-specific handler or dispatch to Domain */ }
-    protected virtual void beforeUpdate() { /* Implement in SObject-specific handler or dispatch to Domain */ }
-    protected virtual void afterUpdate() { /* Implement in SObject-specific handler or dispatch to Domain */ }
-    protected virtual void beforeDelete() { /* Implement in SObject-specific handler or dispatch to Domain */ }
-    protected virtual void afterDelete() { /* Implement in SObject-specific handler or dispatch to Domain */ }
-    protected virtual void afterUndelete() { /* Implement in SObject-specific handler or dispatch to Domain */ }
+    /**
+     * @description Handler for before insert trigger context
+     */
+    protected virtual void beforeInsert() {
+        // Implement in SObject-specific handler or dispatch to Domain
+    }
+    
+    /**
+     * @description Handler for after insert trigger context
+     */
+    protected virtual void afterInsert() {
+        // Implement in SObject-specific handler or dispatch to Domain
+    }
+    
+    /**
+     * @description Handler for before update trigger context
+     */
+    protected virtual void beforeUpdate() {
+        // Implement in SObject-specific handler or dispatch to Domain
+    }
+    
+    /**
+     * @description Handler for after update trigger context
+     */
+    protected virtual void afterUpdate() {
+        // Implement in SObject-specific handler or dispatch to Domain
+    }
+    
+    /**
+     * @description Handler for before delete trigger context
+     */
+    protected virtual void beforeDelete() {
+        // Implement in SObject-specific handler or dispatch to Domain
+    }
+    
+    /**
+     * @description Handler for after delete trigger context
+     */
+    protected virtual void afterDelete() {
+        // Implement in SObject-specific handler or dispatch to Domain
+    }
+    
+    /**
+     * @description Handler for after undelete trigger context
+     */
+    protected virtual void afterUndelete() {
+        // Implement in SObject-specific handler or dispatch to Domain
+    }
 
     // --- Bypass Logic ---
+    /**
+     * @description Bypasses trigger execution for a specific SObject type
+     * @param sObjType The SObject type to bypass
+     */
     public static void bypass(SObjectType sObjType) {
         bypassMap.put(sObjType, true);
     }
 
+    /**
+     * @description Clears bypass for a specific SObject type
+     * @param sObjType The SObject type to clear bypass for
+     */
     public static void clearBypass(SObjectType sObjType) {
         bypassMap.put(sObjType, false);
     }
 
+    /**
+     * @description Checks if trigger execution is bypassed for a specific SObject type
+     * @param sObjType The SObject type to check
+     * @return True if bypassed, false otherwise
+     */
     public static Boolean isBypassed(SObjectType sObjType) {
-        if (bypassAll) return true;
+        if (bypassAll) {
+            return true;
+        }
         return bypassMap.containsKey(sObjType) && bypassMap.get(sObjType);
     }
 
+    /**
+     * @description Bypasses trigger execution for all SObject types
+     */
     public static void bypassAllTriggers() {
         bypassAll = true;
     }
 
+    /**
+     * @description Clears bypass for all SObject types
+     */
     public static void clearBypassAllTriggers() {
         bypassAll = false;
     }
 
     // --- Utility Methods ---
+    /**
+     * @description Gets record IDs from the current trigger context
+     * @return List of record IDs
+     */
     private List<Id> getRecordIdsFromContext() {
         List<Id> recordIds = new List<Id>();
         if (this.newRecords != null) {
             for (SObject sObj : this.newRecords) {
-                if (sObj.Id != null) recordIds.add(sObj.Id);
+                if (sObj.Id != null) {
+                    recordIds.add(sObj.Id);
+                }
             }
         }
         // If new is empty (e.g. delete) or no Ids found yet, check old records
         if (recordIds.isEmpty() && this.oldRecords != null) { 
             for (SObject sObj : this.oldRecords) {
-                if (sObj.Id != null) recordIds.add(sObj.Id);
+                if (sObj.Id != null) {
+                    recordIds.add(sObj.Id);
+                }
             }
         }
         return recordIds;
@@ -159,6 +229,7 @@ public with sharing class AOF_TriggerHandler {
 
     /**
      * @description Helper to get the actual class name for logging purposes, useful if this class is extended.
+     * @return The class name
      */
     private String getClassName() {
         return String.valueOf(this).substring(0,String.valueOf(this).indexOf(':'));

@@ -40,6 +40,7 @@ public abstract with sharing class AOF_Application_Selector {
     public List<String> getAllQueryableFields() {
         List<String> fieldNames = new List<String>();
         Map<String, SObjectField> fieldMap = getFieldMap();
+        
         for (String fieldName : fieldMap.keySet()) {
             DescribeFieldResult fieldDescribe = fieldMap.get(fieldName).getDescribe();
             if (fieldDescribe.isAccessible() && fieldDescribe.isQueryable()) {
@@ -61,18 +62,18 @@ public abstract with sharing class AOF_Application_Selector {
         }
 
         String fields = fieldsToQuery != null && !fieldsToQuery.isEmpty() ? buildFieldList(fieldsToQuery) : getDefaultFields();
+        
         // Ensure Id is always queried if not explicitly included, as it's fundamental.
-        if (!fields.toLowerCase().contains("id")) {
+        if (!fields.toLowerCase().contains('id')) {
             fields = String.isNotBlank(fields) ? (
-                Schema.SObjectType.Id.getDescribe().getName() + 
-                	(fields.startsWith(",") ? fields : "," + fields)
-                ) : Schema.SObjectType.Id.getDescribe().getName();
+                'Id' + (fields.startsWith(',') ? fields : ',' + fields)
+            ) : 'Id';
         }
-        String query = 
-            String.format(
-                'SELECT {0} FROM {1} WHERE Id IN :recordIds WITH SECURITY_ENFORCED',
-                new List<String>{fields, this.sObjectType.getDescribe().getName()}
-            );
+        
+        String query = String.format(
+            'SELECT {0} FROM {1} WHERE Id IN :recordIds WITH SECURITY_ENFORCED',
+            new List<String>{fields, this.sObjectType.getDescribe().getName()}
+        );
         
         return Database.query(query);
     }
@@ -84,38 +85,38 @@ public abstract with sharing class AOF_Application_Selector {
      * @return Comma-separated string of field names.
      */
     protected String buildFieldList(List<SObjectField> fields) {
-        List<String> fieldNames = new List<String>();
-        if (fields != null) {
-            for (SObjectField field : fields) {
-                DescribeFieldResult fieldDescribe = field.getDescribe();
-                if (fieldDescribe.isAccessible() && fieldDescribe.isQueryable()) {
-                    fieldNames.add(fieldDescribe.getName());
-                }
-            }
-        }
-        if (fieldNames.isEmpty()) {
-            // Fallback to default fields if no accessible/queryable fields were provided or if list was empty
+        if (fields == null || fields.isEmpty()) {
             return getDefaultFields();
         }
+        
+        List<String> fieldNames = new List<String>();
+        for (SObjectField field : fields) {
+            if (field == null) {
+                continue;
+            }
+            
+            DescribeFieldResult fieldDescribe = field.getDescribe();
+            if (fieldDescribe.isAccessible() && fieldDescribe.isQueryable()) {
+                fieldNames.add(fieldDescribe.getName());
+            }
+        }
+        
+        if (fieldNames.isEmpty()) {
+            // Fallback to default fields if no accessible/queryable fields were provided
+            return getDefaultFields();
+        }
+        
         return String.join(fieldNames, ', ');
     }
 
     /**
      * @description Defines a default set of fields to query if none are specified. 
      *              Concrete selectors should override this to provide meaningful defaults for their SObject.
-     *              By default, it queries only the Id field if accessible and queryable.
+     *              By default, it queries only the Id field.
      * @return Comma-separated string of default field names.
      */
     public virtual String getDefaultFields() {
-        DescribeFieldResult idFieldDescribe = Schema.SObjectType.Id.getDescribe();
-        if(idFieldDescribe.isAccessible() && idFieldDescribe.isQueryable()){
-            return idFieldDescribe.getName();
-        }
-        // If Id is not queryable/accessible (highly unlikely for standard Id), this indicates a problem.
-        // Or, for a custom object without any accessible fields, this might return empty.
-        // Consider throwing an error or logging if no default fields can be determined.
-        return 
-            SObjectType.Id.getDescribe().getName(); // Fallback to trying Id, WITH SECURITY_ENFORCED will catch it if not accessible.
+        return 'Id';
     }
 
     /**
@@ -137,12 +138,12 @@ public abstract with sharing class AOF_Application_Selector {
         Integer offsetCount
     ) {
         String fieldList = buildFieldList(fieldsToQuery);
+        
         // Ensure Id is always queried if not explicitly included
-        if (!fieldList.toLowerCase().contains(SObjectType.Id.getDescribe().getName().toLowerCase())) {
-             fieldList = String.isNotBlank(fieldList) ? (
-                Schema.SObjectType.Id.getDescribe().getName() + 
-                	(fieldList.startsWith(",") ? fieldList : "," + fieldList)
-                ) : Schema.SObjectType.Id.getDescribe().getName();
+        if (!fieldList.toLowerCase().contains('id')) {
+            fieldList = String.isNotBlank(fieldList) ? (
+                'Id' + (fieldList.startsWith(',') ? fieldList : ',' + fieldList)
+            ) : 'Id';
         }
 
         String queryString = String.format(
@@ -153,12 +154,15 @@ public abstract with sharing class AOF_Application_Selector {
         if (String.isNotBlank(condition)) {
             queryString += ' WHERE ' + condition;
         }
+        
         if (String.isNotBlank(orderBy)) {
             queryString += ' ORDER BY ' + orderBy;
         }
+        
         if (limitCount != null && limitCount > 0) {
             queryString += ' LIMIT ' + limitCount;
         }
+        
         if (offsetCount != null && offsetCount > 0) {
             queryString += ' OFFSET ' + offsetCount;
         }

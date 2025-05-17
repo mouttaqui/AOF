@@ -2,6 +2,7 @@
  * @description Manages DML operations to ensure they are performed efficiently, in the correct order,
  * and within governor limits. It centralizes DML, helps manage transaction boundaries,
  * and reduces the number of DML statements.
+ * Includes object-level CRUD checks during commit.
  * Part of the Apex Orbit Framework (AOF).
  */
 public inherited sharing class AOF_Application_UnitOfWork {
@@ -24,7 +25,7 @@ public inherited sharing class AOF_Application_UnitOfWork {
      * @description Constructor for the Unit of Work.
      */
     public AOF_Application_UnitOfWork() {
-        // Default constructor
+        // Default constructor - intentionally left empty
     }
 
     /**
@@ -40,9 +41,12 @@ public inherited sharing class AOF_Application_UnitOfWork {
      * @param record The SObject record to insert.
      */
     public void registerNew(SObject record) {
-        if (record == null){ return;}
+        if (record == null) {
+            return;
+        }
+
+        SObjectType sType = record.getSObjectType();
         if (this.scope == SObjectScope.PER_TYPE) {
-            SObjectType sType = record.getSObjectType();
             if (!typedNewRecords.containsKey(sType)) {
                 typedNewRecords.put(sType, new List<SObject>());
             }
@@ -57,13 +61,23 @@ public inherited sharing class AOF_Application_UnitOfWork {
      * @param records The list of SObject records to insert.
      */
     public void registerNew(List<SObject> records) {
-        if (records == null || records.isEmpty()) return;
+        if (records == null || records.isEmpty()) {
+            return;
+        }
+
         if (this.scope == SObjectScope.PER_TYPE) {
             for (SObject record : records) {
-                registerNew(record); // Delegate to single record method for typed grouping
+                if (record == null) {
+                    continue;
+                }
+                registerNew(record); 
             }
         } else {
-            this.newRecordsToInsert.addAll(records);
+            for (SObject record : records) {
+                if (record != null) {
+                    this.newRecordsToInsert.add(record);
+                }
+            }
         }
     }
 
@@ -72,9 +86,12 @@ public inherited sharing class AOF_Application_UnitOfWork {
      * @param record The SObject record to update. Must have an Id.
      */
     public void registerDirty(SObject record) {
-        if (record == null || record.Id == null) return;
+        if (record == null || record.Id == null) {
+            return;
+        }
+
+        SObjectType sType = record.getSObjectType();
         if (this.scope == SObjectScope.PER_TYPE) {
-            SObjectType sType = record.getSObjectType();
             if (!typedDirtyRecords.containsKey(sType)) {
                 typedDirtyRecords.put(sType, new Map<Id, SObject>());
             }
@@ -89,10 +106,16 @@ public inherited sharing class AOF_Application_UnitOfWork {
      * @param records The list of SObject records to update. Each must have an Id.
      */
     public void registerDirty(List<SObject> records) {
-        if (records == null || records.isEmpty()) {return;}
+        if (records == null || records.isEmpty()) {
+            return;
+        }
+        
         if (this.scope == SObjectScope.PER_TYPE) {
             for (SObject record : records) {
-                registerDirty(record); // Delegate to single record method for typed grouping
+                if (record == null || record.Id == null) {
+                    continue;
+                }
+                registerDirty(record);
             }
         } else {
             for (SObject record : records) {
@@ -108,9 +131,12 @@ public inherited sharing class AOF_Application_UnitOfWork {
      * @param record The SObject record to delete. Must have an Id.
      */
     public void registerDeleted(SObject record) {
-        if (record == null || record.Id == null) return;
+        if (record == null || record.Id == null) {
+            return;
+        }
+
+        SObjectType sType = record.getSObjectType();
         if (this.scope == SObjectScope.PER_TYPE) {
-            SObjectType sType = record.getSObjectType();
             if (!typedRecordsToDelete.containsKey(sType)) {
                 typedRecordsToDelete.put(sType, new List<SObject>());
             }
@@ -122,9 +148,10 @@ public inherited sharing class AOF_Application_UnitOfWork {
                     break;
                 }
             }
-            if(!found) typedRecordsToDelete.get(sType).add(record);
+            if(!found) {
+                typedRecordsToDelete.get(sType).add(record);
+            }
         } else {
-            // Avoid adding duplicates if already registered by Id
             boolean found = false;
             for(SObject existing : this.recordsToDelete){
                 if(existing.Id == record.Id){
@@ -132,7 +159,9 @@ public inherited sharing class AOF_Application_UnitOfWork {
                     break;
                 }
             }
-            if(!found) this.recordsToDelete.add(record);
+            if(!found) {
+                this.recordsToDelete.add(record);
+            }
         }
     }
 
@@ -141,15 +170,20 @@ public inherited sharing class AOF_Application_UnitOfWork {
      * @param records The list of SObject records to delete. Each must have an Id.
      */
     public void registerDeleted(List<SObject> records) {
-        if (records == null || records.isEmpty()) return;
+        if (records == null || records.isEmpty()) {
+            return;
+        }
+
         if (this.scope == SObjectScope.PER_TYPE) {
             for (SObject record : records) {
-                registerDeleted(record); // Delegate to single record method for typed grouping
+                if (record == null || record.Id == null) {
+                    continue;
+                }
+                registerDeleted(record);
             }
         } else {
             for (SObject record : records) {
                 if (record != null && record.Id != null) {
-                     // Avoid adding duplicates if already registered by Id
                     boolean found = false;
                     for(SObject existing : this.recordsToDelete){
                         if(existing.Id == record.Id){
@@ -157,64 +191,165 @@ public inherited sharing class AOF_Application_UnitOfWork {
                             break;
                         }
                     }
-                    if(!found) this.recordsToDelete.add(record);
+                    if(!found) {
+                        this.recordsToDelete.add(record);
+                    }
                 }
             }
         }
     }
 
     /**
+     * @description Checks if the current user has the specified CRUD permission on the given SObject type.
+     * @param sType The SObject type to check permissions for.
+     * @param permission The CRUD permission to check (CREATE, UPDATE, DELETE).
+     * @return True if the user has the permission, false otherwise.
+     */
+    private Boolean hasCRUDPermission(SObjectType sType, String permission) {
+        Schema.DescribeSObjectResult describe = sType.getDescribe();
+        
+        if (permission == 'CREATE') {
+            return describe.isCreateable();
+        } else if (permission == 'UPDATE') {
+            return describe.isUpdateable();
+        } else if (permission == 'DELETE') {
+            return describe.isDeletable();
+        }
+        
+        return false;
+    }
+
+    /**
+     * @description Validates CRUD permissions for a collection of SObjects of the same type.
+     * @param sObjects The collection of SObjects to validate.
+     * @param permission The CRUD permission to check (CREATE, UPDATE, DELETE).
+     * @throws AOF_SecurityException if the user lacks the required permission.
+     */
+    private void validateCRUDPermission(List<SObject> sObjects, String permission) {
+        if (sObjects == null || sObjects.isEmpty()) {
+            return;
+        }
+        
+        SObjectType sType = sObjects[0].getSObjectType();
+        if (!hasCRUDPermission(sType, permission)) {
+            String errorMessage = 'User does not have ' + permission + ' permission on SObject: ' + sType.getDescribe().getName();
+            
+            List<Id> recordIds = new List<Id>();
+            for (SObject record : sObjects) {
+                if (record.Id != null) {
+                    recordIds.add(record.Id);
+                }
+            }
+            
+            AOF_ErrorHandlerService.logError(null, errorMessage, AOF_Application_UnitOfWork.class.getName(), 
+                                           'commitWork', recordIds, sType.getDescribe().getName(), 'High');
+            throw new AOF_SecurityException(errorMessage);
+        }
+    }
+
+    /**
      * @description Commits all registered DML operations.
      *              Operations are performed in the order: inserts, updates, deletes.
+     *              Performs object-level CRUD permission checks before each DML operation.
      *              If an error occurs, it throws the DML exception, and the transaction will roll back.
-     *              Consider adding partial success handling if required by specific use cases.
+     * @throws AOF_SecurityException if the user lacks required CRUD permissions.
      */
     public void commitWork() {
-        // Order of operations: Inserts, Updates, Deletes
-        // This order is generally safest to avoid issues with relationships and dependencies.
-
         if (this.scope == SObjectScope.PER_TYPE) {
-            // Process inserts by type
+            // Process inserts by type with CRUD checks
             for (SObjectType sType : typedNewRecords.keySet()) {
                 List<SObject> toInsert = typedNewRecords.get(sType);
                 if (toInsert != null && !toInsert.isEmpty()) {
-                    Database.insert(toInsert, true); // allOrNone = true
+                    validateCRUDPermission(toInsert, 'CREATE');
+                    Database.insert(toInsert, true);
                 }
             }
 
-            // Process updates by type
+            // Process updates by type with CRUD checks
             for (SObjectType sType : typedDirtyRecords.keySet()) {
                 Map<Id, SObject> typeDirtyMap = typedDirtyRecords.get(sType);
                 if (typeDirtyMap != null && !typeDirtyMap.isEmpty()) {
-                    Database.update(typeDirtyMap.values(), true);
+                    List<SObject> toUpdate = typeDirtyMap.values();
+                    validateCRUDPermission(toUpdate, 'UPDATE');
+                    Database.update(toUpdate, true);
                 }
             }
 
-            // Process deletes by type
+            // Process deletes by type with CRUD checks
             for (SObjectType sType : typedRecordsToDelete.keySet()) {
                 List<SObject> toDelete = typedRecordsToDelete.get(sType);
                 if (toDelete != null && !toDelete.isEmpty()) {
+                    validateCRUDPermission(toDelete, 'DELETE');
                     Database.delete(toDelete, true);
                 }
             }
         } else {
-            // Process all inserts together
+            // Process all inserts together with CRUD checks
             if (!this.newRecordsToInsert.isEmpty()) {
+                // Group by SObjectType for CRUD checks
+                Map<SObjectType, List<SObject>> recordsByType = new Map<SObjectType, List<SObject>>();
+                for (SObject record : this.newRecordsToInsert) {
+                    SObjectType sType = record.getSObjectType();
+                    if (!recordsByType.containsKey(sType)) {
+                        recordsByType.put(sType, new List<SObject>());
+                    }
+                    recordsByType.get(sType).add(record);
+                }
+                
+                // Validate CRUD permissions for each type
+                for (SObjectType sType : recordsByType.keySet()) {
+                    validateCRUDPermission(recordsByType.get(sType), 'CREATE');
+                }
+                
+                // Perform the insert
                 Database.insert(this.newRecordsToInsert, true);
             }
 
-            // Process all updates together
+            // Process all updates together with CRUD checks
             if (!this.dirtyRecordsToUpdate.isEmpty()) {
-                Database.update(this.dirtyRecordsToUpdate.values(), true);
+                List<SObject> recordsToUpdate = this.dirtyRecordsToUpdate.values();
+                
+                // Group by SObjectType for CRUD checks
+                Map<SObjectType, List<SObject>> recordsByType = new Map<SObjectType, List<SObject>>();
+                for (SObject record : recordsToUpdate) {
+                    SObjectType sType = record.getSObjectType();
+                    if (!recordsByType.containsKey(sType)) {
+                        recordsByType.put(sType, new List<SObject>());
+                    }
+                    recordsByType.get(sType).add(record);
+                }
+                
+                // Validate CRUD permissions for each type
+                for (SObjectType sType : recordsByType.keySet()) {
+                    validateCRUDPermission(recordsByType.get(sType), 'UPDATE');
+                }
+                
+                // Perform the update
+                Database.update(recordsToUpdate, true);
             }
 
-            // Process all deletes together
+            // Process all deletes together with CRUD checks
             if (!this.recordsToDelete.isEmpty()) {
+                // Group by SObjectType for CRUD checks
+                Map<SObjectType, List<SObject>> recordsByType = new Map<SObjectType, List<SObject>>();
+                for (SObject record : this.recordsToDelete) {
+                    SObjectType sType = record.getSObjectType();
+                    if (!recordsByType.containsKey(sType)) {
+                        recordsByType.put(sType, new List<SObject>());
+                    }
+                    recordsByType.get(sType).add(record);
+                }
+                
+                // Validate CRUD permissions for each type
+                for (SObjectType sType : recordsByType.keySet()) {
+                    validateCRUDPermission(recordsByType.get(sType), 'DELETE');
+                }
+                
+                // Perform the delete
                 Database.delete(this.recordsToDelete, true);
             }
         }
-
-        // Clear collections after commit
+        
         clearRegistrations();
     }
 

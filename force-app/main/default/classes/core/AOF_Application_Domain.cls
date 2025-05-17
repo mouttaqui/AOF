@@ -24,14 +24,17 @@ public abstract with sharing class AOF_Application_Domain {
         if (!this.records.isEmpty()) {
             this.sObjectType = this.records[0].getSObjectType();
             for (SObject record : this.records) {
-                this.newMap.put(record.Id, record);
+                if (record.Id != null) {
+                    this.newMap.put(record.Id, record);
+                }
             }
         } else if (!this.oldMap.isEmpty()) {
             // Handle delete context where Trigger.new is empty
             // SObjectType needs to be derived from oldMap if records is empty
-            // This requires the trigger handler to pass the SObjectType explicitly for deletes
-            // Or, the concrete domain class must know its SObjectType.
-            // For now, we assume sObjectType will be set by the handler or a concrete constructor.
+            SObject firstOldRecord = this.oldMap.values()[0];
+            if (firstOldRecord != null) {
+                this.sObjectType = firstOldRecord.getSObjectType();
+            }
         }
     }
 
@@ -50,13 +53,54 @@ public abstract with sharing class AOF_Application_Domain {
     // --- Trigger Context Methods --- 
     // Concrete domain classes will override these methods to implement specific logic.
 
-    public virtual void onBeforeInsert() { }
-    public virtual void onAfterInsert() { }
-    public virtual void onBeforeUpdate() { }
-    public virtual void onAfterUpdate() { }
-    public virtual void onBeforeDelete() { }
-    public virtual void onAfterDelete() { }
-    public virtual void onUndelete() { }
+    /**
+     * @description Logic to execute in before insert trigger context
+     */
+    public virtual void onBeforeInsert() {
+        // Implement in concrete domain classes
+    }
+    
+    /**
+     * @description Logic to execute in after insert trigger context
+     */
+    public virtual void onAfterInsert() {
+        // Implement in concrete domain classes
+    }
+    
+    /**
+     * @description Logic to execute in before update trigger context
+     */
+    public virtual void onBeforeUpdate() {
+        // Implement in concrete domain classes
+    }
+    
+    /**
+     * @description Logic to execute in after update trigger context
+     */
+    public virtual void onAfterUpdate() {
+        // Implement in concrete domain classes
+    }
+    
+    /**
+     * @description Logic to execute in before delete trigger context
+     */
+    public virtual void onBeforeDelete() {
+        // Implement in concrete domain classes
+    }
+    
+    /**
+     * @description Logic to execute in after delete trigger context
+     */
+    public virtual void onAfterDelete() {
+        // Implement in concrete domain classes
+    }
+    
+    /**
+     * @description Logic to execute in after undelete trigger context
+     */
+    public virtual void onUndelete() {
+        // Implement in concrete domain classes
+    }
 
     // --- Common Utility Methods --- 
 
@@ -67,6 +111,10 @@ public abstract with sharing class AOF_Application_Domain {
      * @return The value of the field from the old record, or null if not found.
      */
     protected Object getOldValue(Id recordId, SObjectField field) {
+        if (recordId == null || field == null) {
+            return null;
+        }
+        
         if (this.oldMap != null && this.oldMap.containsKey(recordId)) {
             return this.oldMap.get(recordId).get(field);
         }
@@ -80,10 +128,26 @@ public abstract with sharing class AOF_Application_Domain {
      * @return True if the field value has changed, false otherwise.
      */
     protected Boolean fieldHasChanged(Id recordId, SObjectField field) {
+        if (recordId == null || field == null) {
+            return false;
+        }
+        
         if (this.newMap.containsKey(recordId) && this.oldMap != null && this.oldMap.containsKey(recordId)) {
             SObject newRecord = this.newMap.get(recordId);
             SObject oldRecord = this.oldMap.get(recordId);
-            return newRecord.get(field) != oldRecord.get(field);
+            
+            Object newValue = newRecord.get(field);
+            Object oldValue = oldRecord.get(field);
+            
+            // Handle null values properly
+            if (newValue == null && oldValue == null) {
+                return false;
+            }
+            if (newValue == null || oldValue == null) {
+                return true;
+            }
+            
+            return newValue != oldValue;
         }
         return false;
     }
@@ -94,7 +158,7 @@ public abstract with sharing class AOF_Application_Domain {
      * @param errorMessage The error message.
      */
     protected void addError(SObject record, String errorMessage) {
-        if (record != null) {
+        if (record != null && String.isNotBlank(errorMessage)) {
             record.addError(errorMessage);
         }
     }
@@ -106,11 +170,14 @@ public abstract with sharing class AOF_Application_Domain {
      * @param errorMessage The error message.
      */
     protected void addError(SObject record, SObjectField field, String errorMessage) {
-        if (record != null && field != null) {
-            record.put(field, record.get(field)); // Ensure field is marked for DML if error is on field not otherwise set
-            record. SObject.getSObjectType().getDescribe().fields.getMap().get(field.getDescribe().getName()).addError(errorMessage);
-        } else if (record != null) {
-            record.addError(errorMessage); // Fallback to SObject-level error if field is null
+        if (record == null || String.isBlank(errorMessage)) {
+            return;
+        }
+        
+        if (field != null) {
+            record.addError(field, errorMessage);
+        } else {
+            record.addError(errorMessage);
         }
     }
 }

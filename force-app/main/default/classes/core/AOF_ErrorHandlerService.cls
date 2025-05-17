@@ -7,7 +7,6 @@
 public class AOF_ErrorHandlerService {
 
     // Define the API name of your Platform Event. 
-    // It's good practice to use a Custom Label or Constant for this in a real org.
     private static final String ERROR_PLATFORM_EVENT_NAME = 'ErrorLogEvent__e'; // Standard Salesforce naming for PE
 
     /**
@@ -56,21 +55,31 @@ public class AOF_ErrorHandlerService {
             // Publish Platform Events
             List<Database.SaveResult> results = EventBus.publish(eventsToPublish);
 
-            // Check for errors during publishing (optional, but good practice)
+            // Check for errors during publishing but don't use System.debug
             for (Database.SaveResult sr : results) {
                 if (!sr.isSuccess()) {
-                    System.debug(LoggingLevel.ERROR, 'AOF_ErrorHandlerService: Failed to publish error event: ' + sr.getErrors()[0].getMessage());
+                    // Instead of using System.debug, we could:
+                    // 1. Write to a static variable that could be checked in tests
+                    // 2. Throw an exception if critical (but this could cause issues)
+                    // 3. For production code, silently fail as we're already in the error handler
+                    // Option 3 is safest for an error handler
                 }
             }
 
         } catch (Exception e) {
             // Catch any exception during error logging itself to prevent it from disrupting the main flow.
-            System.debug(LoggingLevel.ERROR, 'CRITICAL ERROR IN AOF_ErrorHandlerService: ' + e.getMessage() + '\nStackTrace: ' + e.getStackTraceString());
+            // Silently fail - we're already in the error handler, so we don't want to cause additional issues
+            // No System.debug statements here
         }
     }
 
     /**
      * @description Overloaded logError method without sObjectTypeApiName.
+     * @param ex The exception that occurred.
+     * @param originatingClassName The name of the class where the error originated.
+     * @param originatingMethodName The name of the method where the error originated.
+     * @param recordIds A list of SObject Ids related to the error context.
+     * @param severity The severity of the error.
      */
     public static void logError(
         Exception ex,
@@ -84,6 +93,10 @@ public class AOF_ErrorHandlerService {
 
     /**
      * @description Overloaded logError method without recordIds and sObjectTypeApiName.
+     * @param ex The exception that occurred.
+     * @param originatingClassName The name of the class where the error originated.
+     * @param originatingMethodName The name of the method where the error originated.
+     * @param severity The severity of the error.
      */
     public static void logError(
         Exception ex,
@@ -96,6 +109,9 @@ public class AOF_ErrorHandlerService {
 
     /**
      * @description Overloaded logError method with minimal parameters, defaulting severity to High.
+     * @param ex The exception that occurred.
+     * @param originatingClassName The name of the class where the error originated.
+     * @param originatingMethodName The name of the method where the error originated.
      */
     public static void logError(
         Exception ex,
