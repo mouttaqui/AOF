@@ -12,6 +12,8 @@ This document provides a comprehensive guide to understanding, setting up, using
 
 *[Visit the documentation of this framework](https://github.com/mouttaqui/AOF/wiki)* to get more information in detail
 
+## Release Notes
+[Visit Release notes page](https://github.com/mouttaqui/AOF/wiki/Release-Notes)
 ## :bulb: Contributing
 
 Pull requests are welcome. For major changes, please open an issue first
