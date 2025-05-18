@@ -261,7 +261,7 @@ public inherited sharing class AOF_Application_UnitOfWork {
                 List<SObject> toInsert = typedNewRecords.get(sType);
                 if (toInsert != null && !toInsert.isEmpty()) {
                     validateCRUDPermission(toInsert, 'CREATE');
-                    Database.insert(toInsert, true);
+                    Database.insert(toInsert, true); // NOPMD: ApexCRUDViolation
                 }
             }
 
@@ -271,7 +271,7 @@ public inherited sharing class AOF_Application_UnitOfWork {
                 if (typeDirtyMap != null && !typeDirtyMap.isEmpty()) {
                     List<SObject> toUpdate = typeDirtyMap.values();
                     validateCRUDPermission(toUpdate, 'UPDATE');
-                    Database.update(toUpdate, true);
+                    Database.update(toUpdate, true); // NOPMD: ApexCRUDViolation
                 }
             }
 
@@ -280,7 +280,7 @@ public inherited sharing class AOF_Application_UnitOfWork {
                 List<SObject> toDelete = typedRecordsToDelete.get(sType);
                 if (toDelete != null && !toDelete.isEmpty()) {
                     validateCRUDPermission(toDelete, 'DELETE');
-                    Database.delete(toDelete, true);
+                    Database.delete(toDelete, true); // NOPMD: ApexCRUDViolation
                 }
             }
         } else {
@@ -302,7 +302,7 @@ public inherited sharing class AOF_Application_UnitOfWork {
                 }
                 
                 // Perform the insert
-                Database.insert(this.newRecordsToInsert, true);
+                Database.insert(this.newRecordsToInsert, true); // NOPMD: ApexCRUDViolation
             }
 
             // Process all updates together with CRUD checks
@@ -325,7 +325,7 @@ public inherited sharing class AOF_Application_UnitOfWork {
                 }
                 
                 // Perform the update
-                Database.update(recordsToUpdate, true);
+                Database.update(recordsToUpdate, true); // NOPMD: ApexCRUDViolation
             }
 
             // Process all deletes together with CRUD checks
@@ -346,7 +346,7 @@ public inherited sharing class AOF_Application_UnitOfWork {
                 }
                 
                 // Perform the delete
-                Database.delete(this.recordsToDelete, true);
+                Database.delete(this.recordsToDelete, true); // NOPMD: ApexCRUDViolation
             }
         }
         
