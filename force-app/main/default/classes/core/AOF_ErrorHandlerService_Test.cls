@@ -2,7 +2,7 @@
 private class AOF_ErrorHandlerService_Test {
 
     @isTest
-    static void testLogError_WithException_PublishesEvent() {
+    static void testLogErrorWithException_PublishesEvent() {
         Test.startTest();
         try {
             Integer i = 1 / 0; // Cause an exception
@@ -25,7 +25,7 @@ private class AOF_ErrorHandlerService_Test {
     }
 
     @isTest
-    static void testLogError_WithStringMessage_PublishesEvent() {
+    static void testLogErrorWithStringMessage_PublishesEvent() {
         Test.startTest();
         AOF_ErrorHandlerService.logError('This is a test error message.', AOF_ErrorHandlerService_Test.class.getName(), 'testLogError_WithStringMessage_PublishesEvent', 
                                          null, 'System', 'High');
@@ -35,7 +35,7 @@ private class AOF_ErrorHandlerService_Test {
     }
 
     @isTest
-    static void testLogError_NullInputs_HandlesGracefully() {
+    static void testLogErrorNullInputs_HandlesGracefully() {
         Test.startTest();
         try {
             AOF_ErrorHandlerService.logError((Exception)null, null, null, null, null, null);
@@ -48,7 +48,7 @@ private class AOF_ErrorHandlerService_Test {
     }
 
     @isTest
-    static void testLogError_DifferentSeverities() {
+    static void testLogErrorDifferentSeverities() {
         Test.startTest();
         try {
             AOF_ErrorHandlerService.logError('Low severity test', AOF_ErrorHandlerService_Test.class.getName(), 'testLogError_DifferentSeverities', null, 'TestObject', 'Low');
@@ -67,7 +67,7 @@ private class AOF_ErrorHandlerService_Test {
     // The following test demonstrates publishing an event that the subscriber would pick up.
 
     @isTest
-    static void testEventPublishing_ForSubscriberVerification() {
+    static void testEventPublishingForSubscriberVerification() {
         // This test helps verify the data that would be sent to the event bus.
         // The actual Error_Log__c creation is tested in the subscriber's test class.
         ErrorLogEvent__e testEvent = new ErrorLogEvent__e(

@@ -56,49 +56,49 @@ public abstract with sharing class AOF_Application_Domain {
     /**
      * @description Logic to execute in before insert trigger context
      */
-    public virtual void onBeforeInsert() {
+    public virtual void onBeforeInsert() { // NOPMD: EmptyStatementBlock
         // Implement in concrete domain classes
     }
     
     /**
      * @description Logic to execute in after insert trigger context
      */
-    public virtual void onAfterInsert() {
+    public virtual void onAfterInsert() { // NOPMD: EmptyStatementBlock
         // Implement in concrete domain classes
     }
     
     /**
      * @description Logic to execute in before update trigger context
      */
-    public virtual void onBeforeUpdate() {
+    public virtual void onBeforeUpdate() { // NOPMD: EmptyStatementBlock
         // Implement in concrete domain classes
     }
     
     /**
      * @description Logic to execute in after update trigger context
      */
-    public virtual void onAfterUpdate() {
+    public virtual void onAfterUpdate() { // NOPMD: EmptyStatementBlock
         // Implement in concrete domain classes
     }
     
     /**
      * @description Logic to execute in before delete trigger context
      */
-    public virtual void onBeforeDelete() {
+    public virtual void onBeforeDelete() { // NOPMD: EmptyStatementBlock
         // Implement in concrete domain classes
     }
     
     /**
      * @description Logic to execute in after delete trigger context
      */
-    public virtual void onAfterDelete() {
+    public virtual void onAfterDelete() { // NOPMD: EmptyStatementBlock
         // Implement in concrete domain classes
     }
     
     /**
      * @description Logic to execute in after undelete trigger context
      */
-    public virtual void onUndelete() {
+    public virtual void onUndelete() { // NOPMD: EmptyStatementBlock
         // Implement in concrete domain classes
     }
 

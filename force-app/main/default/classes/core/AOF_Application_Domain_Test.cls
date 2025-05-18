@@ -48,7 +48,7 @@ private class AOF_Application_Domain_Test {
     }
 
     @isTest
-    static void testConstructor_WithNewAndOldRecords() {
+    static void testConstructorWithNewAndOldRecords() {
         User testUser = [SELECT Id FROM User WHERE LastName = 'Domain Test User' LIMIT 1];
         
         System.runAs(testUser) {
@@ -69,7 +69,7 @@ private class AOF_Application_Domain_Test {
     }
 
     @isTest
-    static void testConstructor_DeleteContext() {
+    static void testConstructorDeleteContext() {
         User testUser = [SELECT Id FROM User WHERE LastName = 'Domain Test User' LIMIT 1];
         
         System.runAs(testUser) {
@@ -86,7 +86,7 @@ private class AOF_Application_Domain_Test {
     }
 
     @isTest
-    static void testFieldHasChanged_ReturnsTrueWhenChanged() {
+    static void testFieldHasChangedReturnsTrueWhenChanged() {
         User testUser = [SELECT Id FROM User WHERE LastName = 'Domain Test User' LIMIT 1];
         
         System.runAs(testUser) {
@@ -106,7 +106,7 @@ private class AOF_Application_Domain_Test {
     }
 
     @isTest
-    static void testFieldHasChanged_ReturnsFalseWhenNotChanged() {
+    static void testFieldHasChangedReturnsFalseWhenNotChanged() {
         User testUser = [SELECT Id FROM User WHERE LastName = 'Domain Test User' LIMIT 1];
         
         System.runAs(testUser) {
@@ -126,7 +126,7 @@ private class AOF_Application_Domain_Test {
     }
 
     @isTest
-    static void testFieldHasChanged_ReturnsFalseForNewFieldInNewRecord() {
+    static void testFieldHasChangedReturnsFalseForNewFieldInNewRecord() {
         User testUser = [SELECT Id FROM User WHERE LastName = 'Domain Test User' LIMIT 1];
         
         System.runAs(testUser) {
@@ -144,7 +144,7 @@ private class AOF_Application_Domain_Test {
     }
 
     @isTest
-    static void testGetOldValue_ReturnsCorrectValue() {
+    static void testGetOldValueReturnsCorrectValue() {
         User testUser = [SELECT Id FROM User WHERE LastName = 'Domain Test User' LIMIT 1];
         
         System.runAs(testUser) {
@@ -164,7 +164,7 @@ private class AOF_Application_Domain_Test {
     }
 
     @isTest
-    static void testGetOldValue_ReturnsNullForNonExistentOldRecord() {
+    static void testGetOldValueReturnsNullForNonExistentOldRecord() {
         User testUser = [SELECT Id FROM User WHERE LastName = 'Domain Test User' LIMIT 1];
         
         System.runAs(testUser) {
@@ -181,7 +181,7 @@ private class AOF_Application_Domain_Test {
     }
 
     @isTest
-    static void testAddSObjectError_AddsErrorToRecord() {
+    static void testAddSObjectErrorAddsErrorToRecord() {
         User testUser = [SELECT Id FROM User WHERE LastName = 'Domain Test User' LIMIT 1];
         
         System.runAs(testUser) {
@@ -198,7 +198,7 @@ private class AOF_Application_Domain_Test {
     }
 
     @isTest
-    static void testAddFieldError_AddsErrorToField() {
+    static void testAddFieldErrorAddsErrorToField() {
         User testUser = [SELECT Id FROM User WHERE LastName = 'Domain Test User' LIMIT 1];
         
         System.runAs(testUser) {
@@ -225,7 +225,7 @@ private class AOF_Application_Domain_Test {
 
     // Test the virtual methods are callable (they do nothing in base class)
     @isTest
-    static void testVirtualMethods_Callable() {
+    static void testVirtualMethodsCallable() {
         User testUser = [SELECT Id FROM User WHERE LastName = 'Domain Test User' LIMIT 1];
         
         System.runAs(testUser) {

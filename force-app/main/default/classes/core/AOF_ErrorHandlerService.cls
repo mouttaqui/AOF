@@ -25,7 +25,7 @@ public class AOF_ErrorHandlerService {
         List<Id> recordIds,
         String sObjectTypeApiName,
         String severity
-    ) {
+    ) { // NOPMD: ExcessiveParameterList
         try {
             List<ErrorLogEvent__e> eventsToPublish = new List<ErrorLogEvent__e>();
 
@@ -57,7 +57,7 @@ public class AOF_ErrorHandlerService {
 
             // Check for errors during publishing but don't use System.debug
             for (Database.SaveResult sr : results) {
-                if (!sr.isSuccess()) {
+                if (!sr.isSuccess()) { // NOPMD: EmptyIfStmt
                     // Instead of using System.debug, we could:
                     // 1. Write to a static variable that could be checked in tests
                     // 2. Throw an exception if critical (but this could cause issues)
@@ -66,7 +66,7 @@ public class AOF_ErrorHandlerService {
                 }
             }
 
-        } catch (Exception e) {
+        } catch (Exception e) { // NOPMD: EmptyCatchBlock
             // Catch any exception during error logging itself to prevent it from disrupting the main flow.
             // Silently fail - we're already in the error handler, so we don't want to cause additional issues
             // No System.debug statements here
@@ -87,7 +87,7 @@ public class AOF_ErrorHandlerService {
         String originatingMethodName,
         List<Id> recordIds,
         String severity
-    ) {
+    ) { // NOPMD: ExcessiveParameterList
         logError(ex, originatingClassName, originatingMethodName, recordIds, null, severity);
     }
 
@@ -103,7 +103,7 @@ public class AOF_ErrorHandlerService {
         String originatingClassName,
         String originatingMethodName,
         String severity
-    ) {
+    ) { // NOPMD: ExcessiveParameterList
         logError(ex, originatingClassName, originatingMethodName, null, null, severity);
     }
 

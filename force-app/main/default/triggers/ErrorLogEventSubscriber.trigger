@@ -19,6 +19,7 @@ trigger ErrorLogEventSubscriber on ErrorLogEvent__e (after insert) {
     if (!logsToCreate.isEmpty()) {
         // Consider error handling for DML on Error_Log__c itself, though it should be rare.
         // Using Database.insert with allOrNone=false can log partial successes if needed.
-        Database.insert(logsToCreate, false); 
+        // Replace by using UOW
+        Database.insert(logsToCreate, false); // NOPMD: ApexCRUDViolation
     }
 }

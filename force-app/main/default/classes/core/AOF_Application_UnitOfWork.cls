@@ -5,7 +5,7 @@
  * Includes object-level CRUD checks during commit.
  * Part of the Apex Orbit Framework (AOF).
  */
-public inherited sharing class AOF_Application_UnitOfWork {
+public inherited sharing class AOF_Application_UnitOfWork { // NOPMD: CognitiveComplexity, CyclomaticComplexity
 
     private List<SObject> newRecordsToInsert = new List<SObject>();
     private Map<Id, SObject> dirtyRecordsToUpdate = new Map<Id, SObject>(); // Using Map to ensure unique records by Id
@@ -24,7 +24,7 @@ public inherited sharing class AOF_Application_UnitOfWork {
     /**
      * @description Constructor for the Unit of Work.
      */
-    public AOF_Application_UnitOfWork() {
+    public AOF_Application_UnitOfWork() { // NOPMD: EmptyStatementBlock
         // Default constructor - intentionally left empty
     }
 

@@ -1,6 +1,5 @@
 @isTest
 private class AOF_Application_UnitOfWork_Test {
-
     // Helper to create a Profile
     private static Id createProfile(String profileName) {
         Profile p = [SELECT Id FROM Profile WHERE Name = :profileName LIMIT 1];
@@ -8,14 +7,13 @@ private class AOF_Application_UnitOfWork_Test {
             // For simplicity, we'll use Standard User if the specified profile isn't found
             try {
                 p = [SELECT Id FROM Profile WHERE Name = 'Standard User' LIMIT 1];
-            } catch(QueryException e){
+            } catch(QueryException e){ // NOPMD: EmptyCatchBlock
                 // If Standard User is not found, this test's RunAs part will be less effective
-                //NOPMD
+                
             }
         }
         return p.Id;
     }
-
     // Helper to create a User
     private static User createUser(String alias, Id profileId) {
         User u = new User(
@@ -31,7 +29,6 @@ private class AOF_Application_UnitOfWork_Test {
         );
         return u;
     }
-
     @TestSetup
     static void makeData(){
         // Create a restricted user for permission testing
@@ -57,7 +54,6 @@ private class AOF_Application_UnitOfWork_Test {
         };
         insert multiDeleteAccounts;
     }
-
     @isTest
     static void testRegisterNew_SingleObject_CommitsSuccessfully() {
         AOF_Application_UnitOfWork uow = new AOF_Application_UnitOfWork();
@@ -72,7 +68,6 @@ private class AOF_Application_UnitOfWork_Test {
         System.assertEquals(1, insertedAccounts.size(), 'Account should have been inserted.');
         System.assertEquals('Test Account UoW New', insertedAccounts[0].Name);
     }
-
     @isTest
     static void testRegisterNew_MultipleObjects_CommitsSuccessfully() {
         AOF_Application_UnitOfWork uow = new AOF_Application_UnitOfWork();
@@ -90,7 +85,6 @@ private class AOF_Application_UnitOfWork_Test {
         System.assertEquals('Test Account UoW Multi 1', insertedAccounts[0].Name);
         System.assertEquals('Test Account UoW Multi 2', insertedAccounts[1].Name);
     }
-
     @isTest
     static void testRegisterDirty_SingleObject_CommitsSuccessfully() {
         Account acc = [SELECT Id, Name FROM Account WHERE Name = 'Initial Name UoW Dirty' LIMIT 1];
@@ -106,7 +100,6 @@ private class AOF_Application_UnitOfWork_Test {
         Account updatedAccount = [SELECT Id, Name FROM Account WHERE Id = :acc.Id];
         System.assertEquals('Updated Name UoW Dirty', updatedAccount.Name, 'Account name should have been updated.');
     }
-
     @isTest
     static void testRegisterDirty_MultipleObjects_CommitsSuccessfully() {
         List<Account> accounts = [SELECT Id, Name FROM Account WHERE Name LIKE 'Initial Dirty Multi %' ORDER BY Name];
@@ -125,7 +118,6 @@ private class AOF_Application_UnitOfWork_Test {
         System.assertEquals('Updated Dirty Multi 1', updatedAccounts[0].Name);
         System.assertEquals('Updated Dirty Multi 2', updatedAccounts[1].Name);
     }
-
     @isTest
     static void testRegisterDeleted_SingleObject_CommitsSuccessfully() {
         Account acc = [SELECT Id FROM Account WHERE Name = 'To Be Deleted UoW' LIMIT 1];
@@ -140,7 +132,6 @@ private class AOF_Application_UnitOfWork_Test {
         List<Account> deletedAccounts = [SELECT Id FROM Account WHERE Id = :acc.Id];
         System.assertEquals(0, deletedAccounts.size(), 'Account should have been deleted.');
     }
-
     @isTest
     static void testRegisterDeleted_MultipleObjects_CommitsSuccessfully() {
         List<Account> accounts = [SELECT Id FROM Account WHERE Name LIKE 'To Delete Multi %'];
@@ -155,7 +146,6 @@ private class AOF_Application_UnitOfWork_Test {
         List<Account> deletedAccounts = [SELECT Id FROM Account WHERE Id IN :accounts];
         System.assertEquals(0, deletedAccounts.size(), 'Accounts should have been deleted.');
     }
-
     @isTest
     static void testMixedOperations_CommitsSuccessfullyInOrder() {
         Account accToUpdate = [SELECT Id, Name FROM Account WHERE Name = 'Initial Name UoW Dirty' LIMIT 1];
@@ -184,7 +174,6 @@ private class AOF_Application_UnitOfWork_Test {
         List<Account> deleted = [SELECT Name FROM Account WHERE Id = :accToDelete.Id];
         System.assertEquals(0, deleted.size());
     }
-
     @isTest
     static void testCommitWork_NoOperationsRegistered_DoesNothing() {
         AOF_Application_UnitOfWork uow = new AOF_Application_UnitOfWork();
@@ -197,7 +186,6 @@ private class AOF_Application_UnitOfWork_Test {
         Integer dmlStatementsAfter = Limits.getDmlStatements();
         System.assertEquals(dmlStatementsBefore, dmlStatementsAfter, 'No DML statements should have been used.');
     }
-    
     @isTest
     static void testRegister_NullInputs_HandlesGracefully() {
         AOF_Application_UnitOfWork uow = new AOF_Application_UnitOfWork();
@@ -222,7 +210,6 @@ private class AOF_Application_UnitOfWork_Test {
         Integer dmlStatementsAfter = Limits.getDmlStatements();
         System.assertEquals(dmlStatementsBefore, dmlStatementsAfter, 'No DML statements should have been used for nulls.');
     }
-
     @isTest
     static void testCommitWork_DmlException_RollsBack() {
         AOF_Application_UnitOfWork uow = new AOF_Application_UnitOfWork();
@@ -253,7 +240,6 @@ private class AOF_Application_UnitOfWork_Test {
         List<Account> accounts = [SELECT Id FROM Account WHERE Name = 'Valid UoW Pre-Fail'];
         System.assertEquals(0, accounts.size(), 'The valid account should have been rolled back.');
     }
-
     // --- CRUD Permission Tests ---
     // Note: These tests now check for exceptions at commit time, not registration time
 
@@ -270,7 +256,6 @@ private class AOF_Application_UnitOfWork_Test {
         }
         return u;
     }
-
     @isTest
     static void testCommitWork_NoCreatePermission_ThrowsSecurityException() {
         User restrictedUser = getTestRestrictedUser();
@@ -302,7 +287,6 @@ private class AOF_Application_UnitOfWork_Test {
         List<Account> insertedAccounts = [SELECT Id FROM Account WHERE Name = 'No Create Test'];
         System.assertEquals(0, insertedAccounts.size(), 'Account should not have been inserted due to permission denial.');
     }
-
     @isTest
     static void testCommitWork_NoUpdatePermission_ThrowsSecurityException() {
         Account accToUpdate = new Account(Name = 'No Update Setup');
@@ -341,7 +325,6 @@ private class AOF_Application_UnitOfWork_Test {
         Account finalAccountState = [SELECT Description FROM Account WHERE Id = :accToUpdate.Id];
         System.assertNotEquals('Attempting Update', finalAccountState.Description, 'Account description should not have been updated.');
     }
-
     @isTest
     static void testCommitWork_NoDeletePermission_ThrowsSecurityException() {
         Account accToDelete = new Account(Name = 'No Delete Setup');
@@ -378,7 +361,6 @@ private class AOF_Application_UnitOfWork_Test {
         List<Account> existingAccounts = [SELECT Id FROM Account WHERE Id = :accToDelete.Id];
         System.assertEquals(1, existingAccounts.size(), 'Account should still exist due to permission denial.');
     }
-
     @isTest
     static void testCommitWork_MixedPermissions_ThrowsEarly() {
         // This test assumes a custom object `AOF_Custom_Object__c` exists and the restricted user
@@ -424,7 +406,6 @@ private class AOF_Application_UnitOfWork_Test {
         List<Account> insertedAccounts = [SELECT Id FROM Account WHERE Name = 'Mixed Perm Test Acc'];
         System.assertEquals(0, insertedAccounts.size(), 'Account should not have been inserted.');
     }
-
     @isTest
     static void testClearRegistrations_ClearsAllLists() {
         AOF_Application_UnitOfWork uow = new AOF_Application_UnitOfWork();
@@ -446,7 +427,6 @@ private class AOF_Application_UnitOfWork_Test {
         Integer dmlAfter = Limits.getDmlStatements();
         System.assertEquals(dmlBefore, dmlAfter, 'No DML should occur after clearing registrations.');
     }
-
     // Test for SObjectScope.PER_TYPE
     @isTest
     static void testRegisterAndCommit_PerTypeScope_Success() {

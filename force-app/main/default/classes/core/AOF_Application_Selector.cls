@@ -39,8 +39,7 @@ public abstract with sharing class AOF_Application_Selector {
      */
     public List<String> getAllQueryableFields() {
         List<String> fieldNames = new List<String>();
-        Map<String, SObjectField> fieldMap = getFieldMap();
-        
+        Map<String, SObjectField> fieldMap = getFieldMap();  
         for (String fieldName : fieldMap.keySet()) {
             DescribeFieldResult fieldDescribe = fieldMap.get(fieldName).getDescribe();
             if (fieldDescribe.isAccessible() && fieldDescribe.isQueryable()) {
@@ -62,7 +61,6 @@ public abstract with sharing class AOF_Application_Selector {
         }
 
         String fields = fieldsToQuery != null && !fieldsToQuery.isEmpty() ? buildFieldList(fieldsToQuery) : getDefaultFields();
-        
         // Ensure Id is always queried if not explicitly included, as it's fundamental.
         if (!fields.toLowerCase().contains('id')) {
             fields = String.isNotBlank(fields) ? (
@@ -136,7 +134,7 @@ public abstract with sharing class AOF_Application_Selector {
         String orderBy, 
         Integer limitCount, 
         Integer offsetCount
-    ) {
+    ) { // NOPMD: CyclomaticComplexity,ExcessiveParameterList
         String fieldList = buildFieldList(fieldsToQuery);
         
         // Ensure Id is always queried if not explicitly included
