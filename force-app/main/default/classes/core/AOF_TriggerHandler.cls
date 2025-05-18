@@ -77,7 +77,7 @@ public with sharing class AOF_TriggerHandler {
             }
 
         } catch (Exception e) {
-            AOF_ErrorHandlerService.logError(e, this.getClassName(), 'run', getRecordIdsFromContext(), this.sObjectType.getDescribe().getName(), 'Critical');
+            AOF_ErrorHandlerService.logError(e, this.getClassName(), 'run', getRecordIdsFromContext(), this.sObjectType.getDescribe(SObjectDescribeOptions.DEFERRED).getName(), 'Critical');
             // If an exception reaches here, it's an unexpected error.
             // Decide on re-throw strategy. If record.addError() was used for all foreseeable issues,
             // an exception here is truly unexpected and should probably cause a rollback.

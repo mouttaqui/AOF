@@ -29,7 +29,7 @@ public abstract with sharing class AOF_Application_Selector {
      * @return Map<String, SObjectField> of field names to SObjectField tokens.
      */
     public Map<String, SObjectField> getFieldMap() {
-        return this.sObjectType.getDescribe().fields.getMap();
+        return this.sObjectType.getDescribe(SObjectDescribeOptions.DEFERRED).fields.getMap();
     }
 
     /**
@@ -72,7 +72,7 @@ public abstract with sharing class AOF_Application_Selector {
         
         String query = String.format(
             'SELECT {0} FROM {1} WHERE Id IN :recordIds WITH SECURITY_ENFORCED',
-            new List<String>{fields, this.sObjectType.getDescribe().getName()}
+            new List<String>{fields, this.sObjectType.getDescribe(SObjectDescribeOptions.DEFERRED).getName()}
         );
         
         return Database.query(query);
@@ -148,7 +148,7 @@ public abstract with sharing class AOF_Application_Selector {
 
         String queryString = String.format(
             'SELECT {0} FROM {1}',
-            new List<String>{fieldList, this.sObjectType.getDescribe().getName()}
+            new List<String>{fieldList, this.sObjectType.getDescribe(SObjectDescribeOptions.DEFERRED).getName()}
         );
 
         if (String.isNotBlank(condition)) {

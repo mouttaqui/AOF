@@ -10,6 +10,7 @@ private class AOF_Application_UnitOfWork_Test {
                 p = [SELECT Id FROM Profile WHERE Name = 'Standard User' LIMIT 1];
             } catch(QueryException e){
                 // If Standard User is not found, this test's RunAs part will be less effective
+                //NOPMD
             }
         }
         return p.Id;
