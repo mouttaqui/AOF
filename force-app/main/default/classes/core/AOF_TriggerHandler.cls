@@ -2,6 +2,7 @@
  * @description A trigger handler that all SObject triggers delegate to.
  * It manages trigger context and orchestrates logic execution by calling appropriate methods
  * in the Domain or Service layers. Runs with sharing to respect user context.
+ * Supports metadata-driven configuration.
  * Part of the Apex Orbit Framework (AOF).
  */
 public with sharing class AOF_TriggerHandler {
@@ -39,20 +40,27 @@ public with sharing class AOF_TriggerHandler {
     /**
      * @description Main method to execute the trigger logic based on context.
      *              This method should be called from the SObject-specific trigger.
+     *              Respects metadata-driven configuration settings.
      */
     public void run() {
+        // Check if triggers are bypassed programmatically
         if (isBypassed(this.sObjectType)) {
             return;
         }
 
-        try {
-            // The instantiation and dispatch to SObject-specific domain logic
-            // would typically occur here. For a truly generic handler, this might involve
-            // a factory pattern or a configurable dispatch mechanism (e.g., Custom Metadata)
-            // to resolve the appropriate domain class for the SObjectType.
-            // The virtual methods below serve as extension points for concrete handlers
-            // or for a more sophisticated dispatch within this run method.
+        // Check if triggers are disabled via metadata configuration
+        if (!isEnabledByMetadata()) {
+            return;
+        }
 
+        try {
+            // Check if the specific trigger event is enabled via metadata
+            String eventName = getTriggerEventName();
+            if (!isEventEnabledByMetadata(eventName)) {
+                return;
+            }
+
+            // Execute the appropriate handler method based on trigger operation
             if (this.triggerOperation == System.TriggerOperation.BEFORE_INSERT) {
                 this.beforeInsert();
             } else if (this.triggerOperation == System.TriggerOperation.AFTER_INSERT) {
@@ -77,7 +85,7 @@ public with sharing class AOF_TriggerHandler {
             }
 
         } catch (Exception e) {
-            AOF_ErrorHandlerService.logError(e, this.getClassName(), 'run', getRecordIdsFromContext(), this.sObjectType.getDescribe(SObjectDescribeOptions.DEFERRED).getName(), 'Critical');
+            AOF_ErrorHandlerService.logError(e, this.getClassName(), 'run', getRecordIdsFromContext(), this.sObjectType.getDescribe().getName(), 'Critical');
             // If an exception reaches here, it's an unexpected error.
             // Decide on re-throw strategy. If record.addError() was used for all foreseeable issues,
             // an exception here is truly unexpected and should probably cause a rollback.
@@ -95,6 +103,56 @@ public with sharing class AOF_TriggerHandler {
             }
             // Re-throwing the exception ensures the DML operation is rolled back by Salesforce if not already handled by addError.
             throw e; // Re-throw to ensure transaction rollback if not handled by addError
+        }
+    }
+
+    /**
+     * @description Checks if trigger execution is enabled by metadata configuration
+     * @return True if enabled, false if disabled
+     */
+    private Boolean isEnabledByMetadata() {
+        return AOF_TriggerConfigurationService.isActive(this.sObjectType);
+    }
+
+    /**
+     * @description Checks if a specific trigger event is enabled by metadata configuration
+     * @param eventName The name of the trigger event (e.g., beforeinsert, afterupdate)
+     * @return True if enabled, false if disabled
+     */
+    private Boolean isEventEnabledByMetadata(String eventName) {
+        return AOF_TriggerConfigurationService.isEventEnabled(this.sObjectType, eventName);
+    }
+
+    /**
+     * @description Gets the name of the current trigger event
+     * @return The trigger event name (e.g., beforeinsert, afterupdate)
+     */
+    private String getTriggerEventName() {
+        switch on this.triggerOperation {
+            when BEFORE_INSERT {
+                return 'beforeinsert';
+            }
+            when AFTER_INSERT {
+                return 'afterinsert';
+            }
+            when BEFORE_UPDATE {
+                return 'beforeupdate';
+            }
+            when AFTER_UPDATE {
+                return 'afterupdate';
+            }
+            when BEFORE_DELETE {
+                return 'beforedelete';
+            }
+            when AFTER_DELETE {
+                return 'afterdelete';
+            }
+            when AFTER_UNDELETE {
+                return 'afterundelete';
+            }
+            when else {
+                return '';
+            }
         }
     }
 
